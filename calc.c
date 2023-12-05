@@ -1,7 +1,6 @@
 #include <xgfx/window.h>
 #include <xgfx/drawing.h>
 #include <math.h>
-#include <stdio.h>
 
 XEvent eventBuffer[100];
 
