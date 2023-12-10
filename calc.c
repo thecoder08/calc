@@ -82,7 +82,7 @@ int main() {
         }
         a[0] = sinf(time) - 1;
         a[1] = cosf(time);
-        
+
         d[0] = -sinf(time) + 1;
         d[1] = -cosf(time);
 
@@ -98,16 +98,16 @@ int main() {
         int dX;
         int dY;
         transformCoords(d[0], d[1], &dX, &dY);
-        line(aX, aY, bX, bY, 0x00ff0000);
-        line(bX, bY, cX, cY, 0x00ff0000);
-        line(cX, cY, dX, dY, 0x00ff0000);
+        line(aX, aY, bX, bY, 0x00ff00ff);
+        line(bX, bY, cX, cY, 0x00ff00ff);
+        line(cX, cY, dX, dY, 0x00ff00ff);
 
         for (float t = 0; t < 1.01; t += 0.05) {
             vec2 p;
             cubicBezier(a, b, c, d, p, t);
             transformCoords(p[0], p[1], &screenX, &screenY);
             if (t != 0) {
-                line(oldX, oldY, screenX, screenY, 0x0000ff00);
+                line(oldX, oldY, screenX, screenY, 0x0000ffff);
             }
             oldX = screenX;
             oldY = screenY;
