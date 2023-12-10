@@ -1,21 +1,27 @@
 #include <xgfx/window.h>
 #include <xgfx/drawing.h>
 #include <math.h>
+#include "lerp.h"
 
 XEvent eventBuffer[100];
 
 void transformCoords(float x, float y, int* screenX, int* screenY) {
     *screenX = x*96 + 320;
-    *screenY = y*-96 + 240;
+    *screenY = -y*96 + 240;
 }
 
-float f(float x, float t) {
-    return powf(x, 4) + powf(x, 3) - 2*powf(x, 2) - 3*x + 1;
+float f(float x, float time) {
+    return powf(x,3)+(sinf(time)-1)*x;
 }
+
+vec2 a;
+vec2 b = {-1, 0};
+vec2 c = {1, 0};
+vec2 d;
 
 int main() {
     initWindow(640, 480, "Calculator");
-    float t = 0;
+    float time = 5;
     while(1) {
         int eventsRead = checkWindowEvents(eventBuffer, 100);
         for (int i = 0; i < eventsRead; i++) {
@@ -27,67 +33,87 @@ int main() {
         rectangle(0, 0, 640, 480, 0x00000000);
         line(0, 240, 640, 240, 0x00ffffff);
         line(320, 0, 320, 480, 0x00ffffff);
-        int oldX = 0;
-        int oldY = 0;
+        int oldX;
+        int oldY;
+        int screenX;
+        int screenY;
         for (float x = -5; x < 5; x += 0.1) {
-            int screenX;
-            int screenY;
-            transformCoords(x, f(x, t), &screenX, &screenY);
-            line(oldX, oldY, screenX, screenY, 0x00ff0000);
+            transformCoords(x, f(x, time), &screenX, &screenY);
+            if (x > -5) {
+                line(oldX, oldY, screenX, screenY, 0x00ff0000);
+            }
             oldX = screenX;
             oldY = screenY;
         }
-        oldX = 0;
-        oldY = 0;
         for (float x = -5; x < 5; x += 0.1) {
-            int screenX;
-            int screenY;
             float h = 0.1;
-            transformCoords(x, (f(x+h, t)-f(x, t))/h, &screenX, &screenY);
-            line(oldX, oldY, screenX, screenY, 0x0000ff00);
+            transformCoords(x, (f(x+h, time)-f(x, time))/h, &screenX, &screenY);
+            if (x > -5) {
+                line(oldX, oldY, screenX, screenY, 0x0000ff00);
+            }
             oldX = screenX;
             oldY = screenY;
         }
-        oldX = 0;
-        oldY = 0;
-        for (float x = -5; x < 5; x += 0.1) {
+        for (float x = 0; x < 5; x += 0.1) {
             float h = 10;
             float sum = 0;
-            for (int i = 0; i < x * h; i++) {
-                sum += f(i/h, t);
+            for (int i = 0; i < round(x*h); i++) {
+                sum += f(i/h, time);
             }
-            int screenX;
-            int screenY;
             transformCoords(x, sum/h, &screenX, &screenY);
-            if (x >= 0) {
+            if (x > 0) {
                 line(oldX, oldY, screenX, screenY, 0x000000ff);
             }
             oldX = screenX;
             oldY = screenY;
         }
-        oldX = 0;
-        oldY = 0;
-        for (float x = -5; x < 5; x += 0.1) {
+        for (float x = -5; x < 0; x += 0.1) {
             float h = 10;
             float sum = 0;
             for (int i = 0; i > x * h; i--) {
-                sum -= f(i/h, t);
+                sum -= f(i/h, time);
             }
-            int screenX;
-            int screenY;
             transformCoords(x, sum/h, &screenX, &screenY);
-            if (x < 0) {
+            if (x > -5) {
                 line(oldX, oldY, screenX, screenY, 0x000000ff);
             }
             oldX = screenX;
             oldY = screenY;
         }
-        /*int screenX;
-        int screenY;
-        transformCoords(0, sinf(t), &screenX, &screenY);
-        printf("%f, %f, %d, %d\n", 0.0, sinf(t), screenX, screenY);
-        line(0, 0, screenX, screenY, 0x000000ff);*/
-        t += 0.01;
+        a[0] = sinf(time) - 1;
+        a[1] = cosf(time);
+        
+        d[0] = -sinf(time) + 1;
+        d[1] = -cosf(time);
+
+        int aX;
+        int aY;
+        transformCoords(a[0], a[1], &aX, &aY);
+        int bX;
+        int bY;
+        transformCoords(b[0], b[1], &bX, &bY);
+        int cX;
+        int cY;
+        transformCoords(c[0], c[1], &cX, &cY);
+        int dX;
+        int dY;
+        transformCoords(d[0], d[1], &dX, &dY);
+        line(aX, aY, bX, bY, 0x00ff0000);
+        line(bX, bY, cX, cY, 0x00ff0000);
+        line(cX, cY, dX, dY, 0x00ff0000);
+
+        for (float t = 0; t < 1.01; t += 0.05) {
+            vec2 p;
+            cubicBezier(a, b, c, d, p, t);
+            transformCoords(p[0], p[1], &screenX, &screenY);
+            if (t != 0) {
+                line(oldX, oldY, screenX, screenY, 0x0000ff00);
+            }
+            oldX = screenX;
+            oldY = screenY;
+        }
+
+        time += 0.01;
         updateWindow();
     }
 }
