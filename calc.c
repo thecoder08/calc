@@ -3,8 +3,6 @@
 #include <math.h>
 #include "lerp.h"
 
-XEvent eventBuffer[100];
-
 void transformCoords(float x, float y, int* screenX, int* screenY) {
     *screenX = x*96 + 320;
     *screenY = -y*96 + 240;
@@ -23,14 +21,13 @@ int main() {
     initWindow(640, 480, "Calculator");
     float time = 5;
     while(1) {
-        int eventsRead = checkWindowEvents(eventBuffer, 100);
-        for (int i = 0; i < eventsRead; i++) {
-            XEvent event = eventBuffer[i];
-            if (event.type == ClosedWindow) {
+        Event event;
+        while (checkWindowEvent(&event)) {
+            if (event.type == WINDOW_CLOSE) {
                 return 0;
             }
         }
-        rectangle(0, 0, 640, 480, 0x00000000);
+        clear();
         line(0, 240, 640, 240, 0x00ffffff);
         line(320, 0, 320, 480, 0x00ffffff);
         int oldX;
